@@ -36,7 +36,7 @@ STATES = [
     "SE",
     "TO",
 ]
-YEARS = range(2024, 2026)
+YEARS = range(2020, 2026)
 COLUMNS = ["Ano", "Mês", "Estado", "Cidade", "Quantidade"]
 
 
