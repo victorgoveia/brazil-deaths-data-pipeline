@@ -40,7 +40,7 @@ YEARS = range(2020, 2026)
 COLUMNS = ["Ano", "Mês", "Estado", "Cidade", "Quantidade"]
 
 
-def generate_date_range(year, month):
+def get_date_range_for_month(year, month):
     start_date = datetime(year, month, 1)
     end_date = (
         datetime(year, month + 1, 1) - timedelta(days=1)
@@ -50,8 +50,8 @@ def generate_date_range(year, month):
     return start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d")
 
 
-def fetch_deaths(state, year, month):
-    start_date, end_date = generate_date_range(year, month)
+def fetch_monthly_death_records(state, year, month):
+    start_date, end_date = get_date_range_for_month(year, month)
     url = f"{API_URL}?start_date={start_date}&end_date={end_date}&state={state}"
 
     try:
@@ -69,12 +69,16 @@ def fetch_deaths(state, year, month):
     return []
 
 
-def collect_data():
+def fetch_all_death_data():
     all_data = []
 
     with ThreadPoolExecutor(max_workers=10) as executor:
         futures = {
-            executor.submit(fetch_deaths, state, year, month): (state, year, month)
+            executor.submit(fetch_monthly_death_records, state, year, month): (
+                state,
+                year,
+                month,
+            )
             for year in YEARS
             for month in range(1, 13)
             for state in STATES
@@ -88,8 +92,8 @@ def collect_data():
     return pd.DataFrame(all_data, columns=COLUMNS)
 
 
-def coletar_dados(formato="csv", caminho_saida="data/raw/"): # ou parquet
-    df = collect_data()
+def run_data_collection(formato="csv", caminho_saida="data/raw/"):
+    df = fetch_all_death_data()
     os.makedirs(caminho_saida, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     nome_arquivo = f"dados_obitos_{timestamp}.{formato}"

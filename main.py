@@ -1,4 +1,4 @@
-from src.pipeline import executar_pipeline
+from src.pipeline import run_pipeline
 
 if __name__ == "__main__":
-    executar_pipeline()
+    run_pipeline()

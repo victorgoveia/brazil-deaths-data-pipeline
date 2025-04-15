@@ -1,10 +1,11 @@
-from src.coleta import coletar_dados
-from src.tratamento import tratar_dados
+from src.api_client import run_data_collection
+from src.transform import transform_data
 from src.loader import send_to_postgres
 
-def executar_pipeline():
+
+def run_pipeline():
     print("\n🚀 Iniciando pipeline de dados...")
-    df = coletar_dados(formato="csv")  # ou parquet
-    df = tratar_dados(df)
+    df = run_data_collection(formato="csv")
+    df = transform_data(df)
     send_to_postgres(df)
     print("✅ Pipeline finalizada com sucesso.")
