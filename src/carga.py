@@ -1,5 +1,6 @@
 import pandas as pd
 import psycopg2
+import os
 
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from sqlalchemy import create_engine
@@ -23,11 +24,16 @@ def create_database_if_not_exists(dbname, user, password, host="localhost", port
     conn.close()
 
 
-def send_to_postgres(df, tabela="obitos_tratados"):
-    conn_str = (
-        f"postgresql+psycopg2://{DB_CONFIG['user']}:{DB_CONFIG['password']}"
-        f"@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}"
-    )
-    engine = create_engine(conn_str)
-    df.to_sql(tabela, engine, if_exists="replace", index=False)
-    print(f"✅ Tabela '{tabela}' atualizada no PostgreSQL com sucesso.")
+def send_to_postgres(df: pd.DataFrame):
+    user = os.getenv("POSTGRES_USER")
+    password = os.getenv("POSTGRES_PASSWORD")
+    host = os.getenv("POSTGRES_HOST", "localhost")
+    port = os.getenv("POSTGRES_PORT", 5432)
+    dbname = os.getenv("POSTGRES_DB")
+    tabela = os.getenv("POSTGRES_TABLE", "mortalidade")
+
+    create_database_if_not_exists(dbname, user, password, host, port)
+
+    engine = create_engine(f"postgresql://{user}:{password}@{host}:{port}/{dbname}")
+    df.to_sql(tabela, con=engine, if_exists="append", index=False)
+    print(f">>> Dados inseridos em '{tabela}' com sucesso.")
