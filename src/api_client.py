@@ -3,41 +3,11 @@ import pandas as pd
 import os
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import logging
 
+from src.settings import API_URL, HEADERS, STATES, COLUMNS
 
-API_URL = "https://transparencia.registrocivil.org.br/api/record/death"
-HEADERS = {"User-Agent": "Mozilla/5.0"}
-STATES = [
-    "AC",
-    "AL",
-    "AM",
-    "AP",
-    "BA",
-    "CE",
-    "DF",
-    "ES",
-    "GO",
-    "MA",
-    "MT",
-    "MS",
-    "MG",
-    "PA",
-    "PB",
-    "PR",
-    "PE",
-    "PI",
-    "RJ",
-    "RN",
-    "RO",
-    "RR",
-    "RS",
-    "SC",
-    "SP",
-    "SE",
-    "TO",
-]
-YEARS = range(2020, 2026)
-COLUMNS = ["Ano", "Mês", "Estado", "Cidade", "Quantidade"]
+logging.basicConfig(level=logging.INFO)
 
 
 def get_date_range_for_month(year, month):
@@ -60,16 +30,19 @@ def fetch_monthly_death_records(state, year, month):
         data = response.json()
 
         if "data" in data:
+            logging.info(
+                f"[{state}] {year}-{month:02d}: {len(data['data'])} registros encontrados."
+            )
             return [
                 [year, month, state, item["name"], item["total"]]
                 for item in data["data"]
             ]
     except requests.exceptions.RequestException as e:
-        print(f"Erro ao buscar dados para {state} ({year}-{month}): {e}")
+        logging.error(f"Erro ao buscar dados para {state} ({year}-{month}): {e}")
     return []
 
 
-def fetch_all_death_data():
+def fetch_death_data_by_years(years):
     all_data = []
 
     with ThreadPoolExecutor(max_workers=10) as executor:
@@ -79,7 +52,7 @@ def fetch_all_death_data():
                 year,
                 month,
             )
-            for year in YEARS
+            for year in years
             for month in range(1, 13)
             for state in STATES
         }
@@ -89,22 +62,6 @@ def fetch_all_death_data():
             if result:
                 all_data.extend(result)
 
-    return pd.DataFrame(all_data, columns=COLUMNS)
-
-
-def run_data_collection(formato="csv", caminho_saida="data/raw/"):
-    df = fetch_all_death_data()
-    os.makedirs(caminho_saida, exist_ok=True)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    nome_arquivo = f"dados_obitos_{timestamp}.{formato}"
-    caminho_completo = os.path.join(caminho_saida, nome_arquivo)
-
-    if formato == "excel":
-        df.to_excel(caminho_completo, index=False)
-    elif formato == "csv":
-        df.to_csv(caminho_completo, index=False, sep=";")
-    else:
-        df.to_parquet(caminho_completo, index=False)
-
-    print(f"✅ Dados salvos com sucesso em {caminho_completo}")
+    df = pd.DataFrame(all_data, columns=COLUMNS)
+    logging.info(f"Total de registros coletados: {len(df)}")
     return df
