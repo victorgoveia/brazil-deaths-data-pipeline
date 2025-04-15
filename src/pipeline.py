@@ -1,6 +1,6 @@
 from src.coleta import coletar_dados
 from src.tratamento import tratar_dados
-from src.carga import send_to_postgres
+from src.loader import send_to_postgres
 
 def executar_pipeline():
     print("\n🚀 Iniciando pipeline de dados...")
