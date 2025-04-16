@@ -15,9 +15,6 @@ from src.settings import (
 
 
 def create_database_if_not_exists():
-    """
-    Conecta ao banco 'postgres' e cria o banco principal, se ele ainda não existir.
-    """
     conn = psycopg2.connect(
         dbname="postgres",
         user=POSTGRES_USER,
@@ -39,17 +36,12 @@ def create_database_if_not_exists():
 
 
 def prepare_deaths_facts(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Converte os dados brutos para o formato de fato (FKs) com city_id, year_id.
-    """
     engine = create_engine(get_database_url())
     with engine.begin() as conn:
-        # Mapeamento das dimensões
         city_rows = conn.execute(text("SELECT id, name, state_id FROM cities")).mappings().all()
         state_rows = conn.execute(text("SELECT id, uf FROM states")).mappings().all()
         year_rows = conn.execute(text("SELECT id, year FROM years")).mappings().all()
 
-    # Dicionários para lookup
     state_map = {r["uf"]: r["id"] for r in state_rows}
     city_map = {(r["name"].strip().title(), r["state_id"]): r["id"] for r in city_rows}
     year_map = {r["year"]: r["id"] for r in year_rows}
@@ -80,9 +72,6 @@ def prepare_deaths_facts(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def send_to_postgres(df: pd.DataFrame):
-    """
-    Garante que o banco existe, transforma os dados e envia para a tabela 'deaths'.
-    """
     create_database_if_not_exists()
     engine = create_engine(get_database_url())
 
