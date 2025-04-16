@@ -17,9 +17,6 @@ def fetch_death_data_by_years(
     max_workers: int = 10,
     timeout: int = 10,
 ) -> pd.DataFrame:
-    """
-    Coleta os registros de óbito por ano e estado, mês a mês, até o mês atual.
-    """
 
     now = datetime.now()
 
@@ -64,5 +61,5 @@ def fetch_death_data_by_years(
                 all_data.extend(result)
 
     df = pd.DataFrame(all_data, columns=COLUMNS)
-    logging.info(f"[✓] Total de registros coletados: {len(df)}")
+    logging.info(f"[✓] Total records collected: {len(df)}")
     return df

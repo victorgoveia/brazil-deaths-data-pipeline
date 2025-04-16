@@ -28,9 +28,9 @@ def create_database_if_not_exists():
     exists = cur.fetchone()
     if not exists:
         cur.execute(f"CREATE DATABASE {POSTGRES_DB}")
-        print(f">>> Banco de dados '{POSTGRES_DB}' criado.")
+        print(f">>> Database '{POSTGRES_DB}' created.")
     else:
-        print(f">>> Banco '{POSTGRES_DB}' já existe.")
+        print(f">>> Database '{POSTGRES_DB}' already exists.")
     cur.close()
     conn.close()
 
@@ -78,10 +78,10 @@ def send_to_postgres(df: pd.DataFrame):
     df_facts = prepare_deaths_facts(df)
 
     if df_facts.empty:
-        print("⚠️ Nenhum dado a ser inserido na tabela de mortes.")
+        print("⚠️ No data to be inserted into the deaths table.")
         return
 
     df_facts.to_sql(
         POSTGRES_TABLE, con=engine, if_exists="append", index=False, method="multi"
     )
-    print(f">>> {len(df_facts)} registros inseridos em '{POSTGRES_TABLE}' com sucesso.")
+    print(f">>> {len(df_facts)} records successfully inserted into '{POSTGRES_TABLE}'.,")

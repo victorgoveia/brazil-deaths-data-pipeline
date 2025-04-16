@@ -6,8 +6,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 def populate_all_tables(df):
-    logging.info("🌐 Populando tabelas de dimensões...")
+    logging.info("🌐 Populating dimension tables...")
     populate_states()
     populate_cities(df)
     populate_years(df)
-    logging.info("✅ População das dimensões finalizada.")
+    logging.info("✅ Finished populating dimension tables.")
