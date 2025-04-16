@@ -2,6 +2,7 @@ import pandas as pd
 import psycopg2
 from sqlalchemy import create_engine, text
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+from datetime import datetime
 
 from src.settings import (
     POSTGRES_USER,
@@ -71,9 +72,29 @@ def prepare_deaths_facts(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(facts)
 
 
+def filter_existing_records(df_facts: pd.DataFrame, engine) -> pd.DataFrame:
+    with engine.connect() as conn:
+        existing = conn.execute(text(
+            "SELECT city_id, year_id, month FROM deaths"
+        )).fetchall()
+
+    existing_keys = {(row[0], row[1], row[2]) for row in existing}
+
+    filtered = df_facts[
+        ~df_facts[["city_id", "year_id", "month"]]
+        .apply(tuple, axis=1)
+        .isin(existing_keys)
+    ]
+
+    return filtered
+
+
 def send_to_postgres(df: pd.DataFrame):
     create_database_if_not_exists()
     engine = create_engine(get_database_url())
+    now = datetime.now()
+    current_year = now.year
+    current_month = now.month
 
     df_facts = prepare_deaths_facts(df)
 
@@ -81,7 +102,25 @@ def send_to_postgres(df: pd.DataFrame):
         print("⚠️ No data to be inserted into the deaths table.")
         return
 
+    with engine.begin() as conn:
+        delete_stmt = text("""
+            DELETE FROM deaths
+            WHERE year_id = :year_id AND month = :month
+        """)
+
+        year_row = conn.execute(
+            text("SELECT id FROM years WHERE year = :year"),
+            {"year": current_year}
+        ).mappings().first()
+
+        year_id = year_row["id"] if year_row else None
+
+        if year_id:
+            conn.execute(delete_stmt, {"year_id": year_id, "month": current_month})
+            print(f">>> Existing records for {current_month:02d}/{current_year} removed before reinserting.")
+
     df_facts.to_sql(
         POSTGRES_TABLE, con=engine, if_exists="append", index=False, method="multi"
     )
-    print(f">>> {len(df_facts)} records successfully inserted into '{POSTGRES_TABLE}'.,")
+    print(f">>> {len(df_facts)} records successfully inserted into '{POSTGRES_TABLE}'.")
+

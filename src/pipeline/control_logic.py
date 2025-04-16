@@ -9,16 +9,8 @@ def is_first_run() -> bool:
         count = result.scalar()
         return count == 0
 
-
 def get_years_to_collect(first_run: bool, now: datetime) -> list[int]:
-    if first_run:
-        return list(range(2015, now.year + 1))
-    return [now.year]
+    return list(range(2015, now.year + 1)) if first_run else [now.year]
 
-
-
-def get_months_to_collect(first_run: bool) -> list[int]:
-    now = datetime.now()
-    if first_run:
-        return list(range(1, 13)) if now.month == 12 else list(range(1, now.month + 1))
-    return [now.month]
+def get_months_to_collect(first_run: bool, now: datetime) -> list[int]:
+    return list(range(1, now.month + 1)) if first_run else [now.month]

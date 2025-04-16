@@ -1,61 +1,65 @@
-import logging
 import requests
 import pandas as pd
+import logging
+
 from datetime import datetime
-from calendar import monthrange
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List
+
 
 from src.settings import API_URL, HEADERS, STATES, COLUMNS
 
 logging.basicConfig(level=logging.INFO)
 
 
-def fetch_death_data_by_years(
-    years: List[int],
-    states: List[str] = STATES,
-    max_workers: int = 10,
-    timeout: int = 10,
-) -> pd.DataFrame:
+def get_date_range_for_month(year, month):
+    start_date = f"{year}-{month:02d}-01"
+    if month == 12:
+        end_date = f"{year + 1}-01-01"
+    else:
+        end_date = f"{year}-{month + 1:02d}-01"
+    return start_date, end_date
 
-    now = datetime.now()
 
-    def valid_month(year: int, month: int) -> bool:
-        return (year < now.year) or (year == now.year and month <= now.month)
+def fetch_monthly_death_records(state, year, month):
+    start_date, end_date = get_date_range_for_month(year, month)
+    url = f"{API_URL}?start_date={start_date}&end_date={end_date}&state={state}"
 
-    def build_tasks(years: List[int]) -> List[tuple]:
-        return [
-            (state, year, month)
-            for year in years
-            for month in range(1, 13)
-            if valid_month(year, month)
-            for state in states
-        ]
+    try:
+        response = requests.get(url, headers=HEADERS, timeout=10)
+        response.raise_for_status()
+        data = response.json()
 
-    def fetch_one_month(state: str, year: int, month: int) -> List[List]:
-        last_day = monthrange(year, month)[1]
-        start = f"{year}-{month:02d}-01"
-        end = f"{year}-{month:02d}-{last_day}"
-        url = f"{API_URL}?start_date={start}&end_date={end}&state={state}"
+        if "data" in data:
+            logging.info(f"[{state}] {year}-{month:02d}: {len(data['data'])} registros")
+            return [
+                [year, month, state, item["name"], item["total"]]
+                for item in data["data"]
+            ]
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Error fetching data for {state} ({year}-{month}): {e}")
+    return []
 
-        try:
-            res = requests.get(url, headers=HEADERS, timeout=timeout)
-            res.raise_for_status()
-            data = res.json().get("data", [])
-            logging.info(f"[{state}] {year}-{month:02d}: {len(data)} registros")
-            return [[year, month, state, d["name"], d["total"]] for d in data]
-        except Exception as e:
-            logging.warning(f"[{state}] {year}-{month:02d} - erro na API: {e}")
-            return []
 
-    tasks = build_tasks(years)
+def fetch_death_data_by_years(years, months=None):
     all_data = []
 
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        future_map = {
-            executor.submit(fetch_one_month, s, y, m): (s, y, m) for s, y, m in tasks
-        }
-        for future in as_completed(future_map):
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        if months is None:
+            tasks = [
+                executor.submit(fetch_monthly_death_records, state, year, month)
+                for year in years
+                for month in range(1, 13)
+                for state in STATES
+            ]
+        else:
+            tasks = [
+                executor.submit(fetch_monthly_death_records, state, year, month)
+                for year in years
+                for month in months
+                for state in STATES
+            ]
+
+        for future in as_completed(tasks):
             result = future.result()
             if result:
                 all_data.extend(result)

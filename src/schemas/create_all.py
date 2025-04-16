@@ -12,9 +12,9 @@ def create_all_tables():
     engine = create_engine(get_database_url())
 
     with engine.begin() as conn:
-        logging.info("🛠️ Criando todas as tabelas do banco...")
+        logging.info("🛠️ Creating tables...")
         create_states_table(conn)
         create_cities_table(conn)
         create_years_table(conn)
         create_deaths_table(conn)
-        logging.info("✅ Todas as tabelas foram criadas com sucesso.")
+        logging.info("✅ Tables successfully created.")
