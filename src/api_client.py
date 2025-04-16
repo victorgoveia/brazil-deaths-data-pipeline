@@ -1,6 +1,5 @@
 import requests
 import pandas as pd
-import os
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import logging

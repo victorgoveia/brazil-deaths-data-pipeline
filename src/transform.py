@@ -1,6 +1,3 @@
-import pandas as pd
-
-
 def transform_data(df):
     df["Ano"] = df["Ano"].astype(int)
     df["Mês"] = df["Mês"].astype(int)
