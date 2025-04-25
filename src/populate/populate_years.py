@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine, text
 from src.settings import get_database_url
 
+
 def populate_years(df):
     engine = create_engine(get_database_url())
 

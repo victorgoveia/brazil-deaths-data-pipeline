@@ -8,6 +8,7 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 
+
 def create_all_tables():
     engine = create_engine(get_database_url())
 

@@ -1,5 +1,6 @@
 from sqlalchemy import text
 
+
 def create_deaths_table(conn):
     conn.execute(text("""
         CREATE TABLE IF NOT EXISTS deaths (

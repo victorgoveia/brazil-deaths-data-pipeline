@@ -5,6 +5,7 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 
+
 def populate_all_tables(df):
     logging.info("🌐 Populating dimension tables...")
     populate_states()

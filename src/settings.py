@@ -21,5 +21,6 @@ POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
 POSTGRES_DB = os.getenv("POSTGRES_DB", "pipeline")
 POSTGRES_TABLE = os.getenv("POSTGRES_TABLE", "deaths")
 
+
 def get_database_url() -> str:
     return f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"

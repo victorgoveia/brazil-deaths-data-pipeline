@@ -1,5 +1,6 @@
 from sqlalchemy import text
 
+
 def create_cities_table(conn):
     conn.execute(text("""
         CREATE TABLE IF NOT EXISTS cities (

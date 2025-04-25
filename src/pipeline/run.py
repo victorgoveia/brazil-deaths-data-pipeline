@@ -10,6 +10,7 @@ from src.pipeline.control_logic import is_first_run, get_years_to_collect, get_m
 
 logging.basicConfig(level=logging.INFO)
 
+
 def run_pipeline():
     logging.info("🚀 Starting pipeline...")
 

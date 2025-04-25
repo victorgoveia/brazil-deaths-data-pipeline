@@ -123,4 +123,3 @@ def send_to_postgres(df: pd.DataFrame):
         POSTGRES_TABLE, con=engine, if_exists="append", index=False, method="multi"
     )
     print(f">>> {len(df_facts)} records successfully inserted into '{POSTGRES_TABLE}'.")
-

@@ -2,7 +2,7 @@ import requests
 import pandas as pd
 import logging
 
-from datetime import datetime
+
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
