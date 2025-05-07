@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine, text
 from src.settings import get_database_url
 
+
 STATES_DATA = [
     ("AC", "Acre", "Norte"),
     ("AL", "Alagoas", "Nordeste"),
